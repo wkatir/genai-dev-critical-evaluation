@@ -254,44 +254,46 @@ class App:
             "[dim]Enter keeps the current value, '-' clears it. Lists are comma-separated.[/dim]"
         )
         f = self.filter
-        try:
-            f.statuses = self._ask_set("Status " + "/".join(s.value for s in Status), f.statuses, Status)
-            f.currencies = self._ask_set("Currency " + "/".join(self.rules.currencies), f.currencies, str.upper)
-            f.sources = self._ask_set("Source " + "/".join(self.rules.sources), f.sources, str)
-            f.date_from = self._ask_value("Date from (YYYY-MM-DD)", f.date_from, date.fromisoformat)
-            f.date_to = self._ask_value("Date to (YYYY-MM-DD)", f.date_to, date.fromisoformat)
-            f.min_amount = self._ask_value("Min amount", f.min_amount, Decimal)
-            f.max_amount = self._ask_value("Max amount", f.max_amount, Decimal)
-            f.text = self._ask_value("Text search (id/description/customer)", f.text, str)
-        except ValueError as exc:
-            self.console.print(f"[red]{exc}. Filter left unchanged from that field on.[/red]")
+        statuses = {s.value: s for s in Status}
+        f.statuses = self._ask_set("Status " + "/".join(statuses), f.statuses, statuses, str.lower)
+        f.currencies = self._ask_set("Currency " + "/".join(self.rules.currencies), f.currencies,
+                                     {c: c for c in self.rules.currencies}, str.upper)
+        f.sources = self._ask_set("Source " + "/".join(self.rules.sources), f.sources,
+                                  {s: s for s in self.rules.sources}, str.lower)
+        f.date_from = self._ask_value("Date from (YYYY-MM-DD)", f.date_from, date.fromisoformat)
+        f.date_to = self._ask_value("Date to (YYYY-MM-DD)", f.date_to, date.fromisoformat)
+        f.min_amount = self._ask_value("Min amount", f.min_amount, Decimal)
+        f.max_amount = self._ask_value("Max amount", f.max_amount, Decimal)
+        f.text = self._ask_value("Text search (id/description/customer)", f.text, str)
+        if f.date_from and f.date_to and f.date_from > f.date_to:
+            self.console.print("[yellow]'Date from' is after 'Date to': no transaction can match.[/yellow]")
+        if f.min_amount is not None and f.max_amount is not None and f.min_amount > f.max_amount:
+            self.console.print("[yellow]Min amount is greater than max amount: no transaction can match.[/yellow]")
         self.console.print("Active filters: " + ("; ".join(f.describe()) or "none"))
 
-    def _ask_set(self, label: str, current: set, convert) -> set:
-        shown = ",".join(sorted(str(c) for c in current))
-        answer = self.ask(label, shown)
-        if answer in ("", "-"):
-            return set()
-        values = set()
-        for item in (a.strip() for a in answer.split(",") if a.strip()):
-            try:
-                values.add(convert(item.lower() if convert is Status else item))
-            except ValueError:
-                raise ValueError(f"'{item}' is not a valid value for {label.split()[0].lower()}") from None
-        if convert is str.upper and not values <= set(self.rules.currencies):
-            raise ValueError(f"unsupported currency in {sorted(values)}")
-        if convert is str and not values <= set(self.rules.sources):
-            raise ValueError(f"unknown source in {sorted(values)}")
-        return values
+    def _ask_set(self, label: str, current: set, choices: dict, normalize) -> set:
+        """Comma-separated values, re-asked until every item is a valid choice."""
+        shown = ",".join(sorted(str(getattr(c, "value", c)) for c in current))
+        while True:
+            answer = self.ask(label, shown)
+            if answer in ("", "-"):
+                return set()
+            items = [normalize(a.strip()) for a in answer.split(",") if a.strip()]
+            invalid = [i for i in items if i not in choices]
+            if not invalid:
+                return {choices[i] for i in items}
+            self.console.print(f"[red]Not valid: {', '.join(invalid)}. Choose from {', '.join(choices)}[/red]")
 
     def _ask_value(self, label: str, current, convert):
-        answer = self.ask(label, "" if current is None else str(current))
-        if answer in ("", "-"):
-            return None
-        try:
-            return convert(answer)
-        except (ValueError, InvalidOperation):
-            raise ValueError(f"'{answer}' is not valid for '{label}'") from None
+        """Single value, re-asked until it converts."""
+        while True:
+            answer = self.ask(label, "" if current is None else str(current))
+            if answer in ("", "-"):
+                return None
+            try:
+                return convert(answer)
+            except (ValueError, InvalidOperation):
+                self.console.print(f"[red]'{answer}' is not valid for '{label}'[/red]")
 
     def clear_filters(self) -> None:
         self.filter = TransactionFilter()
@@ -442,8 +444,8 @@ class App:
 
 
 def print_summary(app: App) -> None:
-    m = app.metrics
-    app.console.print(json.dumps(m.to_dict(), indent=2))
+    # plain print: rich would wrap/highlight lines and break the JSON for pipes
+    print(json.dumps(app.metrics.to_dict(), indent=2))
 
 
 def default_inputs() -> list[str]:

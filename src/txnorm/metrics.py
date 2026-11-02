@@ -24,8 +24,8 @@ class CurrencyTotals:
     def add(self, txn: Transaction) -> None:
         self.count += 1
         self.total += txn.amount
-        if txn.status is Status.COMPLETED:
-            self.completed += txn.amount
+        # adding amount * 0 keeps the currency's decimals ("0.00", not "0")
+        self.completed += txn.amount if txn.status is Status.COMPLETED else txn.amount * 0
 
 
 @dataclass

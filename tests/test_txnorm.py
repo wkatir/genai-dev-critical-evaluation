@@ -194,3 +194,24 @@ def test_cli_interactive_session(monkeypatch, capsys):
     out = capsys.readouterr().out
     assert "Totals by currency" in out and "Rejected records" in out and "Unknown option" in out
     assert "1234.56" in out and "'1.234,56' parsed" in out  # detail shows normalized value and the rule
+
+
+def test_ambiguous_source_is_rejected():
+    source = {"fields": {f: f for f in ("source_id", "amount", "currency", "status", "occurred_at")},
+              "signature": ["source_id", "amount"], "date_formats": ["iso8601"]}
+    rules = parse_rules({"currencies": {"USD": 2}, "statuses": {"completed": ["ok"]},
+                         "sources": {"a": source, "b": source}})
+    raw = {"source_id": "1", "amount": 1, "currency": "USD", "status": "ok", "occurred_at": "2026-10-01T00:00:00Z"}
+    record = process([RawRecord("t.json", 0, raw)], rules, now=NOW).records[0]
+    assert codes(record) == {IssueCode.AMBIGUOUS_SOURCE}
+
+
+def test_cli_filter_reasks_invalid_values(monkeypatch, capsys):
+    # status: done->failed | currency: xyz->none | source | date from: bad->none | date to | min: abc->none | max | text
+    answers = iter(["3", "done", "failed", "xyz", "", "", "2026-13-01", "", "", "abc", "", "", "", "q"])
+    monkeypatch.setattr("builtins.input", lambda *_: next(answers))
+    assert main([str(DATA / "valid_transactions.json")]) == 0
+    out = capsys.readouterr().out
+    assert "Not valid: done" in out and "Not valid: XYZ" in out and "'2026-13-01' is not valid" in out
+    assert "'abc' is not valid for 'Min amount'" in out
+    assert "Active filters: status in failed\n" in out  # invalid answers were re-asked, never applied

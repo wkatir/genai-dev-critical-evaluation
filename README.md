@@ -28,7 +28,7 @@ python -m txnorm data/edge_cases.json            # explore a specific file (seve
 python -m txnorm --summary                       # print metrics as JSON and exit
 python -m txnorm --export output                 # write normalized JSON/CSV, rejected records, metrics
 python -m txnorm --rules my_rules.toml           # use another rules file
-uv run pytest                                    # run the 38 tests
+uv run pytest                                    # run the 40 tests
 ```
 
 ## Interactive interface

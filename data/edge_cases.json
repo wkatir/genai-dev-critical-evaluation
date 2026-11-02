@@ -12,7 +12,7 @@
     {"_note": "UNKNOWN_STATUS: value not in the mapping", "provider": "paygate", "id": "pg_stat01", "amount_cents": 2500, "curr": "usd", "state": "disputed", "created": 1791720000},
     {"_note": "INVALID_AMOUNT: minor units must be integers", "provider": "paygate", "id": "pg_frac01", "amount_cents": 1999.5, "curr": "usd", "state": "succeeded", "created": 1791720000},
     {"_note": "INVALID_DATE: epoch expected, ISO string given", "provider": "paygate", "id": "pg_date01", "amount_cents": 1000, "curr": "usd", "state": "succeeded", "created": "2026-10-13T08:00:00Z"},
-    {"_note": "DATE_OUT_OF_RANGE: in the future (year 2030)", "provider": "paygate", "id": "pg_futr01", "amount_cents": 1000, "curr": "usd", "state": "pending", "created": 1900000000},
+    {"_note": "DATE_OUT_OF_RANGE: in the future (year 2100)", "provider": "paygate", "id": "pg_futr01", "amount_cents": 1000, "curr": "usd", "state": "pending", "created": 4102444800},
     {"_note": "INVALID_DATE: 31 February does not exist", "terminal_id": "POS-MX-12", "ref": "000460", "monto": "100,00", "moneda": "$", "estado": "Aprobada", "fecha": "31/02/2026 10:00"},
     {"_note": "INVALID_AMOUNT: dot-decimal number in a comma-decimal source is ambiguous", "terminal_id": "POS-MX-12", "ref": "000461", "monto": "1234.56", "moneda": "$", "estado": "Aprobada", "fecha": "13/10/2026 10:00"},
     {"_note": "DATE_OUT_OF_RANGE: before the minimum date 2000-01-01", "terminal_id": "POS-MX-07", "ref": "000462", "monto": "50,00", "moneda": "MXN", "estado": "Aprobada", "fecha": "15/06/1999"},

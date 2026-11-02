@@ -37,7 +37,7 @@ suggestions that were reviewed and adjusted:
 | One grand total of all amounts | Totals per currency, also "completed only" | adding USD and COP is meaningless; failed payments are not money received |
 | Treat any repeated id as duplicate | Only a *valid* record claims an id | a corrected resend must be accepted |
 
-Verification: 38 automated tests (parsers, business rules, metrics, filters, config errors,
+Verification: 40 automated tests (parsers, business rules, metrics, filters, config errors,
 CLI session) plus a data-driven test that checks the expected outcome written in each
 `_note` of `data/edge_cases.json`. A bug found during manual review (the `[n]ext` prompt was
-swallowed by the terminal markup) was fixed by escaping the text.
+swallowed by the terminal markup) was fixed by escaping the text, and an invalid filter value no longer aborts the remaining filters: each field is re-asked until valid.

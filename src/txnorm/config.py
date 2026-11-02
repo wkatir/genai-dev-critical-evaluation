@@ -7,7 +7,7 @@ clear message instead of silently mis-normalizing data later.
 from __future__ import annotations
 
 import tomllib
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 from datetime import date
 from pathlib import Path
 from typing import Any
@@ -80,8 +80,7 @@ def load_rules(path: str | Path | None = None) -> Rules:
         raise ConfigError(f"Rules file not found: {path}") from exc
     except tomllib.TOMLDecodeError as exc:
         raise ConfigError(f"Rules file {path} is not valid TOML: {exc}") from exc
-    rules = parse_rules(data)
-    return Rules(**{**rules.__dict__, "path": path})
+    return replace(parse_rules(data), path=path)
 
 
 def parse_rules(data: dict[str, Any]) -> Rules:
