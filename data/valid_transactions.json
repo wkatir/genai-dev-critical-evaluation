@@ -1,0 +1,25 @@
+[
+  {"source": "bank_api", "transaction_id": "BNK-1001", "amount": 1250.5, "currency": "USD", "status": "COMPLETED", "timestamp": "2026-10-01T14:32:00Z", "description": "Wire transfer - invoice 4471", "customer": {"id": "C-1001", "name": "Ana Lopez"}},
+  {"source": "bank_api", "transaction_id": "BNK-1002", "amount": "3,400.00", "currency": "usd", "status": "pending", "timestamp": "2026-10-02T09:10:00-05:00", "description": "Payroll batch", "customer": {"id": "C-1002"}},
+  {"source": "bank_api", "transaction_id": "BNK-1003", "amount": 89.99, "currency": "EUR", "status": "Settled", "timestamp": "2026-10-05T18:00:00+02:00", "description": "SEPA debit", "customer": {"id": "C-1003"}},
+  {"source": "bank_api", "transaction_id": "BNK-1004", "amount": 15000, "currency": "GBP", "status": "declined", "timestamp": "2026-10-07T11:45:30Z", "description": "International transfer", "customer": {"id": "C-1004"}},
+  {"source": "bank_api", "transaction_id": "BNK-1005", "amount": 220.1, "currency": "USD", "status": "reversed", "timestamp": "2026-10-09T08:00:00Z", "description": "Card chargeback", "customer": {"id": "C-1001"}},
+
+  {"provider": "paygate", "id": "pg_7Hk29s", "amount_cents": 459900, "curr": "mxn", "state": "succeeded", "created": 1790867520, "metadata": {"customer_ref": "C-2001", "order": "ORD-889"}},
+  {"provider": "paygate", "id": "pg_8Lm31a", "amount_cents": 1999, "curr": "usd", "state": "succeeded", "created": 1790949600, "metadata": {"customer_ref": "C-2002", "order": "ORD-890"}},
+  {"provider": "paygate", "id": "pg_9Qx44b", "amount_cents": 125000, "curr": "eur", "state": "processing", "created": "1791036000", "metadata": {"customer_ref": "C-2003", "order": "ORD-891"}},
+  {"provider": "paygate", "id": "pg_1Ab55c", "amount_cents": 7500, "curr": "usd", "state": "canceled", "created": 1791212400, "metadata": {"customer_ref": "C-2001", "order": "ORD-892"}},
+  {"provider": "paygate", "id": "pg_2Cd66d", "amount_cents": 350000, "curr": "jpy", "state": "refunded", "created": 1791385200, "metadata": {"customer_ref": "C-2004", "order": "ORD-893"}},
+
+  {"terminal_id": "POS-MX-12", "ref": "000451", "monto": "1.234,56", "moneda": "$", "estado": "Aprobada", "fecha": "01/10/2026 09:15", "concepto": "Venta mostrador", "cliente": "C-3001"},
+  {"terminal_id": "POS-MX-12", "ref": "000452", "monto": "89,90", "moneda": "MXN", "estado": "aprobada", "fecha": "02/10/2026 13:40", "concepto": "Venta mostrador"},
+  {"terminal_id": "POS-MX-07", "ref": "000453", "monto": "12.500,00", "moneda": "$", "estado": "Pendiente", "fecha": "03/10/2026", "concepto": "Apartado", "cliente": "C-3002"},
+  {"terminal_id": "POS-MX-07", "ref": "000454", "monto": "450", "moneda": "mx$", "estado": "Rechazada", "fecha": "04/10/2026 19:05", "concepto": "Tarjeta sin fondos", "cliente": "C-3003"},
+  {"terminal_id": "POS-MX-12", "ref": "000455", "monto": "75,25", "moneda": "US$", "estado": "Cancelada", "fecha": "06/10/2026 10:30", "concepto": "Venta turista"},
+
+  {"meta": {"origin": "wallet_app", "version": 2}, "tx": {"uuid": "wl-9b2f6c1e", "value": {"amount": "45000", "currency": "COP"}, "status_code": 1, "date": "2026-10-03 18:45:10", "note": "P2P transfer"}, "user": {"id": "W-77"}},
+  {"meta": {"origin": "wallet_app", "version": 2}, "tx": {"uuid": "wl-3c7d8e2a", "value": {"amount": 120000.0, "currency": "COP"}, "status_code": 0, "date": "2026-10-04 07:20:00", "note": "Utility bill"}, "user": {"id": "W-78"}},
+  {"meta": {"origin": "wallet_app", "version": 2}, "tx": {"uuid": "wl-5e1f9a3b", "value": {"amount": "15.75", "currency": "USD"}, "status_code": "2", "date": "2026-10-08", "note": "Refund - subscription"}, "user": {"id": "W-77"}},
+  {"tx": {"uuid": "wl-7a2b4c6d", "value": {"amount": "980000", "currency": "COP"}, "status_code": -1, "date": "2026-10-10 22:01:00"}, "user": {"id": "W-79"}},
+  {"meta": {"origin": "wallet_app", "version": 1}, "tx": {"uuid": "wl-8d9e0f1a", "value": {"amount": "60000", "currency": "cop"}, "status_code": 3, "date": "2026-10-11 12:00:00", "note": "Cancelled top-up"}, "user": {"id": "W-80"}}
+]

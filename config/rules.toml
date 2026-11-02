@@ -1,0 +1,144 @@
+# Normalization rules for txnorm.
+# Every transformation applied to a raw record is driven by this file:
+# change the rules here, not in the code.
+
+version = "1.0"
+
+[defaults]
+# Used only when a timestamp has no UTC offset AND its source declares no
+# timezone. Records normalized this way get a TIMEZONE_ASSUMED warning.
+timezone = "UTC"
+
+[validation]
+# Transactions dated before this day are rejected (DATE_OUT_OF_RANGE).
+min_date = "2000-01-01"
+# Tolerance for clock skew between systems before a date counts as "future".
+max_future_skew_minutes = 5
+
+# --------------------------------------------------------------------------
+# Currencies: ISO 4217 code -> number of minor-unit decimals.
+# Amounts are stored as Decimal quantized to these decimals.
+# --------------------------------------------------------------------------
+[currencies]
+USD = 2
+EUR = 2
+GBP = 2
+MXN = 2
+COP = 2
+JPY = 0
+
+# Free-text currency values (symbols, names) -> ISO code. Matching is
+# case-insensitive. A source can override an alias (see pos_terminal),
+# because "$" means different currencies in different countries.
+[currency_aliases]
+"$" = "USD"
+"us$" = "USD"
+"dollar" = "USD"
+"dollars" = "USD"
+"€" = "EUR"
+"euro" = "EUR"
+"euros" = "EUR"
+"£" = "GBP"
+"¥" = "JPY"
+"yen" = "JPY"
+"mx$" = "MXN"
+"col$" = "COP"
+
+# --------------------------------------------------------------------------
+# Status mapping: canonical status -> accepted raw values (case-insensitive).
+# Canonical statuses: completed, pending, failed, cancelled, refunded.
+# --------------------------------------------------------------------------
+[statuses]
+completed = ["completed", "complete", "success", "succeeded", "successful", "approved", "aprobada", "aprobado", "paid", "settled"]
+pending = ["pending", "pendiente", "processing", "in_progress", "authorized", "on_hold"]
+failed = ["failed", "failure", "declined", "rejected", "rechazada", "rechazado", "error"]
+cancelled = ["cancelled", "canceled", "cancelada", "cancelado", "void", "voided"]
+refunded = ["refunded", "reembolsada", "reembolsado", "reversed", "chargeback"]
+
+# --------------------------------------------------------------------------
+# Sources. Each source declares:
+#   marker            explicit field that identifies it (checked first)
+#   signature         paths that must ALL exist for structural detection
+#   fields            canonical field -> path in the raw record (dot notation)
+#   amount_unit       "major" (1250.50) or "minor" (125050 cents)
+#   decimal_separator for string amounts: "." -> 1,234.56 | "," -> 1.234,56
+#   date_formats      tried in order: "iso8601", "epoch_s", "epoch_ms" or strptime patterns
+#   timezone          IANA zone applied to timestamps without an offset
+# --------------------------------------------------------------------------
+[sources.bank_api]
+label = "Core banking API"
+marker = { path = "source", equals = "bank_api" }
+signature = ["transaction_id", "timestamp", "amount"]
+amount_unit = "major"
+decimal_separator = "."
+date_formats = ["iso8601"]
+
+[sources.bank_api.fields]
+source_id = "transaction_id"
+amount = "amount"
+currency = "currency"
+status = "status"
+occurred_at = "timestamp"
+description = "description"
+customer_id = "customer.id"
+
+[sources.payment_gateway]
+label = "Card payment gateway (webhooks)"
+marker = { path = "provider", equals = "paygate" }
+signature = ["id", "amount_cents", "created"]
+amount_unit = "minor"
+decimal_separator = "."
+date_formats = ["epoch_s"]
+
+[sources.payment_gateway.fields]
+source_id = "id"
+amount = "amount_cents"
+currency = "curr"
+status = "state"
+occurred_at = "created"
+description = "metadata.order"
+customer_id = "metadata.customer_ref"
+
+[sources.pos_terminal]
+label = "In-store POS terminals (legacy export, es-MX)"
+signature = ["terminal_id", "ref", "monto", "fecha"]
+amount_unit = "major"
+decimal_separator = ","
+date_formats = ["%d/%m/%Y %H:%M", "%d/%m/%Y"]
+timezone = "America/Mexico_City"
+currency_aliases = { "$" = "MXN" }
+
+[sources.pos_terminal.fields]
+source_id = "ref"
+amount = "monto"
+currency = "moneda"
+status = "estado"
+occurred_at = "fecha"
+description = "concepto"
+customer_id = "cliente"
+
+[sources.mobile_wallet]
+label = "Mobile wallet app"
+marker = { path = "meta.origin", equals = "wallet_app" }
+signature = ["tx.uuid", "tx.value"]
+amount_unit = "major"
+decimal_separator = "."
+date_formats = ["%Y-%m-%d %H:%M:%S", "%Y-%m-%d"]
+timezone = "America/Bogota"
+
+[sources.mobile_wallet.fields]
+source_id = "tx.uuid"
+amount = "tx.value.amount"
+currency = "tx.value.currency"
+status = "tx.status_code"
+occurred_at = "tx.date"
+description = "tx.note"
+customer_id = "user.id"
+
+# The wallet reports numeric status codes on top of the global aliases.
+[sources.mobile_wallet.status_aliases]
+completed = ["1"]
+pending = ["0"]
+failed = ["-1"]
+cancelled = ["3"]
+refunded = ["2"]

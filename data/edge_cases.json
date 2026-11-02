@@ -1,0 +1,28 @@
+{
+  "description": "Inconsistent records. Each one documents the expected outcome in _note (ignored by the normalizer).",
+  "transactions": [
+    {"_note": "VALID baseline for the duplicate tests below", "source": "bank_api", "transaction_id": "BNK-2001", "amount": 500, "currency": "USD", "status": "completed", "timestamp": "2026-10-12T10:00:00Z", "customer": {"id": "C-1005"}},
+    {"_note": "DUPLICATE_ID: exact resend of BNK-2001", "source": "bank_api", "transaction_id": "BNK-2001", "amount": 500, "currency": "USD", "status": "completed", "timestamp": "2026-10-12T10:00:00Z", "customer": {"id": "C-1005"}},
+    {"_note": "DUPLICATE_ID: same id, conflicting amount", "source": "bank_api", "transaction_id": "BNK-2001", "amount": 750, "currency": "USD", "status": "completed", "timestamp": "2026-10-12T10:00:00Z"},
+    {"_note": "MISSING_FIELD: no amount", "source": "bank_api", "transaction_id": "BNK-2002", "currency": "USD", "status": "completed", "timestamp": "2026-10-12T11:00:00Z"},
+    {"_note": "MISSING_FIELD (empty status) + UNSUPPORTED_CURRENCY: reports every problem at once", "source": "bank_api", "transaction_id": "BNK-2003", "amount": 10, "currency": "BTC", "status": "  ", "timestamp": "2026-10-12T12:00:00Z"},
+    {"_note": "INVALID_AMOUNT: text that is not a number", "source": "bank_api", "transaction_id": "BNK-2004", "amount": "twelve", "currency": "USD", "status": "completed", "timestamp": "2026-10-12T13:00:00Z"},
+    {"_note": "NON_POSITIVE_AMOUNT: refunds are expressed with status, not a negative sign", "source": "bank_api", "transaction_id": "BNK-2005", "amount": -45.5, "currency": "USD", "status": "refunded", "timestamp": "2026-10-12T14:00:00Z"},
+    {"_note": "NON_POSITIVE_AMOUNT: zero", "provider": "paygate", "id": "pg_zero01", "amount_cents": 0, "curr": "usd", "state": "succeeded", "created": 1791720000},
+    {"_note": "UNKNOWN_STATUS: value not in the mapping", "provider": "paygate", "id": "pg_stat01", "amount_cents": 2500, "curr": "usd", "state": "disputed", "created": 1791720000},
+    {"_note": "INVALID_AMOUNT: minor units must be integers", "provider": "paygate", "id": "pg_frac01", "amount_cents": 1999.5, "curr": "usd", "state": "succeeded", "created": 1791720000},
+    {"_note": "INVALID_DATE: epoch expected, ISO string given", "provider": "paygate", "id": "pg_date01", "amount_cents": 1000, "curr": "usd", "state": "succeeded", "created": "2026-10-13T08:00:00Z"},
+    {"_note": "DATE_OUT_OF_RANGE: in the future (year 2030)", "provider": "paygate", "id": "pg_futr01", "amount_cents": 1000, "curr": "usd", "state": "pending", "created": 1900000000},
+    {"_note": "INVALID_DATE: 31 February does not exist", "terminal_id": "POS-MX-12", "ref": "000460", "monto": "100,00", "moneda": "$", "estado": "Aprobada", "fecha": "31/02/2026 10:00"},
+    {"_note": "INVALID_AMOUNT: dot-decimal number in a comma-decimal source is ambiguous", "terminal_id": "POS-MX-12", "ref": "000461", "monto": "1234.56", "moneda": "$", "estado": "Aprobada", "fecha": "13/10/2026 10:00"},
+    {"_note": "DATE_OUT_OF_RANGE: before the minimum date 2000-01-01", "terminal_id": "POS-MX-07", "ref": "000462", "monto": "50,00", "moneda": "MXN", "estado": "Aprobada", "fecha": "15/06/1999"},
+    {"_note": "VALID with AMOUNT_ROUNDED warning: JPY has no decimals", "source": "bank_api", "transaction_id": "BNK-2006", "amount": 1500.5, "currency": "JPY", "status": "completed", "timestamp": "2026-10-14T09:00:00+09:00"},
+    {"_note": "VALID with TIMEZONE_ASSUMED warning: no offset and bank_api declares no timezone", "source": "bank_api", "transaction_id": "BNK-2007", "amount": 42, "currency": "€", "status": "approved", "timestamp": "2026-10-14T16:20:00"},
+    {"_note": "MISSING_FIELD: wallet record without date", "meta": {"origin": "wallet_app"}, "tx": {"uuid": "wl-miss01", "value": {"amount": "1000", "currency": "COP"}, "status_code": 1}, "user": {"id": "W-81"}},
+    {"_note": "UNKNOWN_STATUS: wallet code 9 is not mapped", "meta": {"origin": "wallet_app"}, "tx": {"uuid": "wl-stat01", "value": {"amount": "1000", "currency": "COP"}, "status_code": 9, "date": "2026-10-15 10:00:00"}, "user": {"id": "W-81"}},
+    {"_note": "UNKNOWN_SOURCE: structure matches no configured source", "merchant": "ACME", "total": 99.9, "when": "2026-10-15"},
+    {"_note": "VALID: detected by its marker even though it carries extra unrelated keys", "source": "bank_api", "transaction_id": "BNK-2008", "amount": "2,000.00", "currency": "USD", "status": "success", "timestamp": "2026-10-16T10:00:00Z", "ref": "X", "terminal_id": "Y"},
+    "MALFORMED_RECORD: a string instead of an object",
+    {"_note": "INVALID_ID: id is an object", "source": "bank_api", "transaction_id": {"value": 1}, "amount": 10, "currency": "USD", "status": "completed", "timestamp": "2026-10-16T10:00:00Z"}
+  ]
+}
