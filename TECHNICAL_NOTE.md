@@ -1,43 +1,45 @@
 # Technical Note
 
-**Author:** Wilmer Salazar · **Project:** txnorm — multi-source transaction normalization
+Wilmer Salazar · txnorm, multi-source transaction normalization
 
 ## Design decisions
 
-1. **Two-level model.** `Transaction` is the strict canonical schema (typed, frozen, only
-   built when a record has no errors). `RecordResult` is an audit envelope kept for *every*
-   input record: detected source, partial normalized fields, a per-field trace of the rule
-   applied, issues and the raw data. This is what lets the interface explain *why* a value
-   looks the way it does.
-2. **Rules as data.** Status mapping, currencies, aliases, date formats and source field
-   mappings live in `config/rules.toml` (TOML chosen because it allows comments and is read
-   by the standard library). The file is validated at startup so a bad rule fails loudly.
-3. **Money is `Decimal`**, quantized to each currency's decimals; totals are only per
-   currency because there is no exchange-rate source.
-4. **All timestamps in UTC**, with source-specific local timezones for naive values.
-5. **Separate, don't discard.** Invalid records are quarantined with all their issues
-   (normalization does not stop at the first error) and excluded from totals; warnings flag
-   but keep a record. The first *valid* occurrence of an id wins over duplicates.
-6. **Layering.** Loader → detection → normalization → validation → metrics/query; the CLI
-   only renders and never contains business logic, so another interface could reuse the core.
+Every valid record becomes a `Transaction`: a typed, immutable object with a Decimal amount,
+an ISO currency, one of five statuses and a UTC timestamp. Before that, each input record is
+processed into a wider envelope (`RecordResult`) that also keeps the raw input, the detected
+source, the issues found and a note per field describing which rule produced its value. Only
+records without errors are promoted to a `Transaction`, so the rest of the code never handles
+half-parsed data, and the interface can explain why a record was accepted or rejected.
+
+Everything that depends on the shape of a source lives in `config/rules.toml`: field
+locations, number and date formats, time zones, the status mapping and the supported
+currencies. The file is validated at startup, so a broken rule stops the program with a clear
+message instead of silently producing wrong data.
+
+Invalid records are never deleted. They go to a quarantine list with every problem found and
+the original input, and they are left out of all totals. Rounded amounts and assumed time
+zones are warnings: the record stays valid but is flagged. Totals are reported per currency
+only, because the project has no source of exchange rates. The interface only displays data;
+detection, normalization, validation, metrics and filtering live in separate modules.
 
 ## Use of AI
 
-Claude Code (Anthropic) was used as a pair programmer: it proposed the module layout, drafted
-the parsers, the CLI and the test data, and ran the test suite after every change. Key
-suggestions that were reviewed and adjusted:
+Claude Code was used as a programming partner. It proposed the module structure, wrote first
+versions of the parsers, the interface and the sample data, and ran the tests after each
+change. Several of its initial suggestions were changed after review:
 
-| Initial suggestion | Adjustment | Reason |
-|---|---|---|
-| Parse amounts as `float` | `Decimal` via `repr`, quantized per currency | `0.1 + 0.2 != 0.3`; money must be exact |
-| Map `$` to USD globally | Per-source alias override (`$` → MXN for the POS) | `$` is ambiguous across countries |
-| Accept `1234.56` in a comma-decimal source | Strict grouping regex, reject as ambiguous | guessing the separator silently corrupts amounts |
-| Represent refunds as negative amounts | Amount always `> 0`; direction comes from status | avoids double negation and ambiguous totals |
-| Stop at the first error per record | Collect every issue of the record | users fix data faster when they see all problems |
-| One grand total of all amounts | Totals per currency, also "completed only" | adding USD and COP is meaningless; failed payments are not money received |
-| Treat any repeated id as duplicate | Only a *valid* record claims an id | a corrected resend must be accepted |
+- Amounts were first parsed as floats. They were moved to Decimal, because floating point
+  cannot represent most cent values exactly.
+- `$` was mapped to USD for every source. Per-source aliases were added, since the POS
+  terminals operate in Mexico.
+- The amount parser tried to guess the decimal separator. It now uses the separator declared
+  for the source and rejects anything ambiguous, such as `1234.56` from a comma-decimal source.
+- Refunds were modelled as negative amounts. Amounts are now always positive and the status
+  carries the direction.
+- Validation stopped at the first error. It now collects every problem in the record.
+- The first metrics draft added all amounts into one total. Totals are now kept per currency.
 
-Verification: 40 automated tests (parsers, business rules, metrics, filters, config errors,
-CLI session) plus a data-driven test that checks the expected outcome written in each
-`_note` of `data/edge_cases.json`. A bug found during manual review (the `[n]ext` prompt was
-swallowed by the terminal markup) was fixed by escaping the text, and an invalid filter value no longer aborts the remaining filters: each field is re-asked until valid.
+Two interface bugs came up while testing by hand: the `[n]ext` prompt disappeared because the
+terminal library treated it as markup, and one invalid filter value cancelled the remaining
+filters. Both were fixed and are covered by tests. The suite has 40 tests, including one that
+checks the expected outcome written in each record of `data/edge_cases.json`.
